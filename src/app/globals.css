@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+
+@import "tailwindcss";
+
+
+:root {
+  --font-inter: 'Inter', sans-serif !important;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Ye body ka scroll bilkul band kar dega */
+  position: fixed; /* Ye mobile browser ko "bounce" karne se rokta hai */
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none !important;  /* IE and Edge */
+    scrollbar-width: none !important;  /* Firefox */
+  }
+}
+
+  body {
+    /* Pure Black to Deep Navy Blue Gradient */
+    background: linear-gradient(180deg, #000000 0%, #020617 100%);
+    background-attachment: fixed;
+    color: white;
+    
+     font-family: var(--font-inter) !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale ;
+  }
+
+/* Scrollbar ko bhi clean monospace look dein */
+
+
+/* Chat area ke liye special gradient class */
+.chat-gradient {
+  background: radial-gradient(circle at center, #0f172a 0%, #020617 60%, #000000 100%);
+}
+/* Custom Scrollbar for Chrome, Safari, and Edge */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000; /* Track color (Black) */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e3a8a; /* Thumb color (Deep Navy Blue) */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6; /* Hover color (Royal Blue) */
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e3a8a #000000;
+}
+
+.top-border{
+  border-top:  0.2px solid rgb(35, 35, 35);
+}
+/* ✅ Isay globals.css mein add karein taake body khud scroll na ho */
+
+.titlebar {
+  -webkit-app-region: drag;
+}
+
+.titlebar button {
+  -webkit-app-region: no-drag;
+}
