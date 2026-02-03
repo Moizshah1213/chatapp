@@ -1,214 +1,330 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, } from "react";
 import { createPortal } from "react-dom";
-import { X, Camera, Image as ImageIcon, LogOut, UserCircle, Palette } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { toast } from "react-hot-toast";
+import { uploadToCloudinary } from "@/lib/upload";
+
+import { 
+  X, LogOut, UserCircle, ShieldCheck, 
+  Bell, Smartphone, Palette, Monitor, Heart, Search, Lock, Activity
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { ProfilesTab } from "./ProfileTab";
+import UnsavedChangesBar from "./UnsavedChangesBar";
 
 export default function SettingsModal({ user, isOpen, onClose }: any) {
-  const [newName, setNewName] = useState(user?.name || "");
-  const [banner, setBanner] = useState(user?.banner || "");
-  const [pfp, setPfp] = useState(user?.image || "");
+  const [activeTab, setActiveTab] = useState("account");
   const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { data: session, update } = useSession();
+  const [hasChanges, setHasChanges] = useState(false);
+  const [pendingData, setPendingData] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+
+  const supabase = createClient();
+  const router = useRouter();
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const pfpInputRef = useRef<HTMLInputElement>(null);
 
+ 
+  
+  // Fetch profile when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    fetch("/api/profile/me")
+      .then(res => res.json())
+      .then((data) => {
+        if (data) setProfile(data);
+      })
+      .catch(() => setProfile(null));
+  }, [isOpen]);
+
+  // Mount effect
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (isOpen) document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = "unset"; };
+  }, [isOpen]);
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'pfp') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert("File size too large! Please select a file under 2MB.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        if (type === 'banner') setBanner(base64String);
-        else setPfp(base64String);
-      };
-      reader.readAsDataURL(file);
-    }
+  // Reset handler
+  const handleReset = () => {
+    setHasChanges(false);
+    setPendingData(null);
+    window.dispatchEvent(new Event("reset-profile-settings"));
   };
 
-  const handleSave = async () => {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  // Save handler
+// SettingsModal.tsx
 
-  if (!cloudName || !uploadPreset) {
-    alert("Cloudinary settings not found");
-    return;
-  }
+// SettingsModal.tsx mein ye function update karein
 
-  setLoading(true);
+const handleSave = async () => {
+  if (!pendingData) return;
+  setIsSaving(true);
+  
+  // 🔄 Ek toast dikhao taake user ko pata chale ke upload ho raha hai
+  const loadingToast = toast.loading("Saving profile and uploading images...");
+
   try {
-    let finalImageUrl = user?.image; // Default: Purani image jo DB mein hai
-    let finalBannerUrl = user?.banner;
+    let finalData = { ...pendingData };
 
-    // 1. PFP Upload Logic
-    if (pfp && pfp.startsWith("data:image")) {
-      const formData = new FormData();
-      formData.append("file", pfp);
-      formData.append("upload_preset", uploadPreset);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.secure_url) {
-        finalImageUrl = data.secure_url;
-        console.log("PFP Uploaded to Cloudinary:", finalImageUrl);
-      } else {
-        throw new Error("PFP Upload Failed: " + data.error?.message);
-      }
+    // 🚀 1. Check & Upload Avatar
+    if (pendingData.image && pendingData.image.startsWith("data:image")) {
+      const avatarUrl = await uploadToCloudinary(pendingData.image);
+      finalData.image = avatarUrl; // Base64 ko URL se replace kar diya
     }
 
-    // 2. Banner Upload Logic
-    if (banner && banner.startsWith("data:image")) {
-      const formData = new FormData();
-      formData.append("file", banner);
-      formData.append("upload_preset", uploadPreset);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.secure_url) {
-        finalBannerUrl = data.secure_url;
-        console.log("Banner Uploaded to Cloudinary:", finalBannerUrl);
-      } else {
-        throw new Error("Banner Upload Failed: " + data.error?.message);
-      }
+    // 🚀 2. Check & Upload Banner
+    if (pendingData.banner && pendingData.banner.startsWith("data:image")) {
+      const bannerUrl = await uploadToCloudinary(pendingData.banner);
+      finalData.banner = bannerUrl;
     }
 
-    // 3. Database Update (Sirf tab chalega jab uploads successful honge)
-    const dbRes = await fetch("/api/user/update", {
+    // 🚀 3. Ab Database update karein (Sirf URLs jayenge)
+    const res = await fetch("/api/user/update-profile", { // Ensure karein ye aapka PATCH route hai
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        name: newName, 
-        banner: finalBannerUrl, 
-        image: finalImageUrl 
-      }),
+      body: JSON.stringify(finalData),
     });
 
-    if (dbRes.ok) {
-      await update(); 
-      onClose();
-      window.location.reload();
-    } else {
-      alert("Database update failed!");
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to update");
     }
 
+    // Success! 
+    setProfile(finalData); // Local state ko naye URLs ke saath update karein
+    setHasChanges(false);
+    toast.success("Profile saved successfully!", { id: loadingToast });
+    
+    // Refresh dashboard in background
+    router.refresh();
+
   } catch (err: any) {
-    console.error("Cloudinary Error:", err);
-    alert("Error: " + err.message); // Ye batayega ke masla Cloudinary mein hai
+    console.error("Save Error:", err);
+    toast.error(err.message || "Error saving changes", { id: loadingToast });
   } finally {
-    setLoading(false);
+    setIsSaving(false);
   }
 };
 
+  // Sign out
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
   if (!isOpen || !mounted) return null;
 
+  const settingsGroups = [
+    {
+      title: "User Settings",
+      items: [
+        { id: "account", label: "My Account", icon: <UserCircle size={18} /> },
+        { id: "profile", label: "Profiles", icon: <Palette size={18} /> },
+        { id: "privacy", label: "Privacy & Safety", icon: <ShieldCheck size={18} /> },
+        { id: "family", label: "Family Center", icon: <Heart size={18} /> },
+        { id: "apps", label: "Authorized Apps", icon: <Monitor size={18} /> },
+        { id: "devices", label: "Devices", icon: <Smartphone size={18} /> },
+      ]
+    },
+    {
+      title: "App Settings",
+      items: [
+        { id: "appearance", label: "Appearance", icon: <Monitor size={18} /> },
+        { id: "accessibility", label: "Accessibility", icon: <UserCircle size={18} /> },
+        { id: "voice", label: "Voice & Video", icon: <Activity size={18} /> },
+        { id: "notifications", label: "Notifications", icon: <Bell size={18} /> },
+      ]
+    }
+  ];
+
+  const handleThemeSelect = (themeId: string) => {
+  const updatedProfile = { ...profile, theme: themeId };
+  setProfile(updatedProfile);
+  setPendingData(updatedProfile); // 👈 Ye handleSave ko signal dega
+  setHasChanges(true);
+};
+
   return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-      <div className="absolute inset-0  backdrop-blur-sm" onClick={onClose} />
-      
-      <div className="relative w-full max-w-[80%] h-[800] chat-gradient rounded-xl flex overflow-hidden shadow-2xl border border-white/10">
-        {/* Sidebar */}
-        <div className="w-[240px] bg-[#000a1e] p-6 border-r border-white/5 flex flex-col justify-between">
-          <div className="space-y-1">
-            <p className="text-[11px] font-bold text-[#949ba4] uppercase px-2 mb-3">User Settings</p>
-            <button className="w-full text-left px-3 py-2 bg-white/10 text-white rounded-lg text-[14px] font-semibold flex items-center gap-2">
-              <UserCircle size={18} /> My Account
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center">
+      {/* Overlay */}
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] md:block hidden" 
+        onClick={onClose} 
+      />
+
+      {/* Modal Container */}
+      <div className="relative bg-[#313338] flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-200 inset-0 w-full h-full md:w-[95%] md:max-w-[1280px] md:h-[85vh] md:rounded-lg md:shadow-2xl md:border md:border-white/5">
+        
+        {/* Left Sidebar */}
+        <div className="w-full md:w-[280px] bg-[#2b2d31] flex md:justify-end shrink-0 overflow-y-auto no-scrollbar py-6 md:py-16">
+          <div className="w-full md:w-[218px] px-4 md:px-0 md:mr-4">
+            {settingsGroups.map((group, idx) => (
+              <div key={idx} className="mb-5">
+                <h3 className="text-[12px] font-bold text-[#949ba4] uppercase px-2.5 mb-1.5 select-none tracking-wide">{group.title}</h3>
+                <nav className="space-y-0.5">
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[15px] font-medium transition-all
+                        ${activeTab === item.id ? "bg-[#3f4147] text-white" : "text-[#b5bac1] hover:bg-[#393b41] hover:text-[#dbdee1]"}`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            ))}
+            <div className="h-[1px] bg-white/5 my-2 mx-2.5" />
+            <button onClick={handleSignOut} className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[15px] font-medium text-[#f23f42] hover:bg-red-500/10 transition-all mt-4">
+              Log Out <LogOut size={16} />
             </button>
           </div>
-          <button onClick={() => signOut()} className="w-full flex items-center gap-2 p-2.5 text-red-400 hover:bg-red-500/10 rounded-lg text-[14px] font-bold">
-            <LogOut size={18} /> Log Out
-          </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 chat-gradient selection:bg-blue-300/80 antialiased  overflow-y-auto no-scrollbar p-10 relative">
-          <button onClick={onClose} className="absolute right-6 top-6 p-2 text-gray-400 hover:text-white">
-            <X size={24} />
-          </button>
+        {/* Right Content */}
+        <div className="flex-auto flex justify-center pt-5 bg-[#313338] relative flex flex-col overflow-hidden">
+          <div className="flex-auto overflow-y-auto pt-16 pb-20 px-4 md:px-10">
+            <div className="max-w-[690px] mx-auto">
 
-          <div className="w-[700px] profile-container">
-
-          <h2 className="text-white text-[22px] font-bold mb-6">My Account</h2>
-
-          <div className="bg-[#1e1f22] rounded-xl overflow-hidden shadow-2xl mb-8 border border-white/5">
-            <div 
-              className="h-40 bg-black relative group cursor-pointer bg-cover bg-center"
-              style={{ backgroundImage: banner ? `url(${banner})` : 'none' }}
-              onClick={() => bannerInputRef.current?.click()}
-            >
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                <span className="text-white text-xs font-bold uppercase">Change Banner</span>
-              </div>
-            </div>
-
-            <div className="px-5 pb-5 flex items-center gap-4 -mt-10 relative">
-              <div 
-                className="relative w-24 h-24 rounded-full border-[8px] border-[#1e1f22] bg-[#2b2d31] overflow-hidden group/avatar cursor-pointer"
-                onClick={() => pfpInputRef.current?.click()}
-              >
-                {pfp ? (
-                  <img src={pfp} className="w-full h-full object-cover" alt="pfp" />
-                ) : user?.image ? (
-                  <img src={user.image} className="w-full h-full object-cover" alt="pfp" />
-                ) : (
-                  <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-3xl font-bold text-white uppercase">
-                    {newName?.substring(0, 2) || "MZ"}
+              {activeTab === "account" && (
+                <div className="animate-in slide-in-from-right-4 duration-300">
+                  <h2 className="text-white text-[20px] font-semibold mb-5 tracking-tight">My Account</h2>
+                  { (profile || user) && (
+                  <div className="bg-[#1e1f22] rounded-lg overflow-hidden border border-black/20 shadow-2xl mb-8">
+                    <div className="h-[200px] bg-zinc-800 bg-cover bg-center" style={{ backgroundImage: `url(${profile?.banner || user?.banner || ""})` }} />
+                    <div className="px-4 pb-4">
+                      <div className="flex items-end justify-between -mt-10 mb-4">
+                        <div className="relative w-24 h-24 rounded-full border-[7px] border-[#1e1f22] bg-[#2b2d31] overflow-hidden">
+<img 
+                src={profile?.image || user?.image || "/default-avatar.png"} 
+                className="w-full h-full object-cover" 
+              />                        </div>
+                        <button onClick={() => setActiveTab("profile")} className="bg-[#5865f2] hover:bg-[#4752c4] text-white px-4 py-1.5 rounded-[3px] text-[14px] font-medium transition-all">
+                          Edit User Profile
+                        </button>
+                      </div>
+                      {/* Info Card */}
+                      <div className="bg-[#2b2d31] rounded-lg p-4 space-y-5">
+                        <div className="flex justify-between items-center group">
+                          <div className="min-w-0">
+                            <p className="text-[12px] font-bold text-[#b5bac1] uppercase tracking-wider mb-0.5">Display Name</p>
+                            <p className="text-white text-[15px] truncate">{profile?.name || user?.name || "User"}</p>
+                          </div>
+                          <button className="bg-[#4e5058] hover:bg-[#6d6f78] text-white px-4 py-1.5 rounded-[3px] text-[14px] font-medium">Edit</button>
+                        </div>
+                        <div className="flex justify-between items-center group">
+                          <div>
+                            <p className="text-[12px] font-bold text-[#b5bac1] uppercase tracking-wider mb-0.5">Username</p>
+                            <p className="text-white text-[15px]">{user?.email?.split("@")[0] || "user"}</p>
+                          </div>
+                          <button className="bg-[#4e5058] hover:bg-[#6d6f78] text-white px-4 py-1.5 rounded-[3px] text-[14px] font-medium">Edit</button>
+                        </div>
+                        <div className="flex justify-between items-center group">
+                          <div>
+                            <p className="text-[12px] font-bold text-[#b5bac1] uppercase tracking-wider mb-0.5">Email</p>
+                            <p className="text-white text-[15px]">{user?.email || "user@example.com"}</p>
+                          </div>
+                          <button className="bg-[#4e5058] hover:bg-[#6d6f78] text-white px-4 py-1.5 rounded-[3px] text-[14px] font-medium">Edit</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center">
-                  <Camera size={20} className="text-white" />
+                  )}
                 </div>
-              </div>
-              <div className="mt-10">
-                <h3 className="text-white text-[20px] font-bold">{newName || user?.name}</h3>
-                <p className="text-[#b5bac1] text-[13px]">@{user?.name?.toLowerCase().replace(/\s/g, '')}</p>
-              </div>
+              )}
+
+              {/* Profile Tab */}
+             {activeTab === "profile" && (
+  <>
+    {!profile ? (
+      <div className="text-white text-center py-10">Loading profile...</div>
+    ) : (
+      <ProfilesTab
+        profile={profile}
+        onStateChange={(changed, data) => {
+          setHasChanges(changed);
+          setPendingData(data);
+        }}
+      />
+    )}
+  </>
+)}
+
+{activeTab === "appearance" && (
+  <div className="animate-in slide-in-from-right-4 duration-300">
+    <h2 className="text-white text-[20px] font-semibold mb-5 tracking-tight">Appearance</h2>
+    
+    {/* PREVIEW CARD */}
+    <div className="mb-8 p-4 rounded-lg bg-[#1e1f22] border border-black/20">
+       <p className="text-[12px] font-bold text-[#b5bac1] uppercase mb-3">Preview</p>
+       <div className={`h-32 rounded-md flex items-center justify-center border border-white/5 overflow-hidden relative ${profile?.theme === 'space-galaxy' ? 'bg-[#02010a]' : 'bg-[#313338]'}`}>
+          {profile?.theme === 'space-galaxy' && <div className="absolute inset-0 bg-[url('/space-stars.png')] opacity-50 animate-pulse" />}
+          <div className="z-10 bg-[#2b2d31] p-3 rounded shadow-xl border border-white/10 flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-indigo-500" />
+             <div className="space-y-1">
+                <div className="w-20 h-2 bg-white/20 rounded" />
+                <div className="w-32 h-2 bg-white/10 rounded" />
+             </div>
+          </div>
+       </div>
+    </div>
+
+    {/* THEME SELECTOR */}
+    <div className="space-y-4">
+      <p className="text-[12px] font-bold text-[#b5bac1] uppercase tracking-wider">Themes</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {[
+          { id: 'dark', name: 'Dark', desc: 'Classic Discord dark mode', color: 'bg-[#313338]' },
+          { id: 'space-galaxy', name: 'Space Galaxy', desc: 'Planets, stars and nebula', color: 'bg-[#02010a] border-indigo-500/50' },
+          { id: 'midnight', name: 'Midnight', desc: 'Deep black for OLED', color: 'bg-black' },
+          { id: 'sunset', name: 'Sunset Gradient', desc: 'Warm orange and purple', color: 'bg-gradient-to-br from-orange-500 to-purple-600' }
+        ].map((t) => (
+          <div 
+            key={t.id}
+            onClick={() => {
+              const newData = { ...profile, theme: t.id };
+              setProfile(newData);
+              setPendingData(newData);
+              setHasChanges(true);
+            }}
+            className={`cursor-pointer p-4 rounded-lg border-2 transition-all flex items-center gap-4 ${profile?.theme === t.id ? 'border-[#5865f2] bg-[#3f4147]' : 'border-white/5 bg-[#2b2d31] hover:bg-[#35373c]'}`}
+          >
+            <div className={`w-10 h-10 rounded-full shrink-0 border border-white/10 ${t.color}`} />
+            <div>
+              <p className="text-white font-medium text-[15px]">{t.name}</p>
+              <p className="text-[12px] text-[#b5bac1]">{t.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
             </div>
           </div>
 
-          <div className="bg-[#2b2d31] p-6 rounded-xl space-y-6 border border-white/5">
-            <h4 className="text-white font-bold text-[16px]">Profile Customization</h4>
-            <div>
-              <label className="text-[11px] font-bold text-[#b5bac1] uppercase block mb-2">Display Name</label>
-              <input 
-                value={newName} 
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full bg-[#1e1f22] p-3 rounded-lg border-none text-[#dbdee1] focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-            </div>
-            <div className="pt-6 border-t border-white/5 flex justify-end">
-              <button 
-                onClick={handleSave}
-                disabled={loading}
-                className="bg-[#23a559] hover:bg-[#1a8344] text-white px-10 py-3 rounded-lg font-bold disabled:opacity-50 transition-all"
-              >
-                {loading ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
+          <UnsavedChangesBar
+            show={hasChanges}
+            loading={isSaving}
+            onReset={handleReset}
+            onSave={handleSave}
+          />
+
+          {/* Close buttons */}
+          <div className="absolute right-6 top-4 hidden md:flex flex-col items-center">
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-[#b5bac1] hover:text-white hover:border-white transition-all group">
+              <X size={18} />
+            </button>
           </div>
-          </div>
+          <button onClick={onClose} className="md:hidden absolute left-4 top-2 p-2 text-white">
+            <X size={20} />
+          </button>
         </div>
       </div>
-
-      <input type="file" ref={bannerInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'banner')} />
-      <input type="file" ref={pfpInputRef} hidden accept="image/*" onChange={(e) => handleUpload(e, 'pfp')} />
     </div>,
     document.body
   );

@@ -30,7 +30,7 @@ export const PinnedMessages = ({ channelId, scrollToMessage, receiverId, message
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div className="absolute top-10 right-0 w-[400px] max-h-[500px] bg-[#2b2d31] shadow-2xl rounded-md border border-black/20 z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 origin-top-right">
             <div className="p-4 border-b border-black/20 bg-[#2b2d31] flex justify-between items-center">
-              <h3 className="text-white font-bold text-sm flex items-center gap-2">
+              <h3 className="text-white font-medium text-sm flex items-center gap-2">
                 <Pin size={14} /> Pinned Messages ({pinnedList.length})
               </h3>
               <X size={18} className="cursor-pointer text-gray-400 hover:text-white" onClick={() => setIsOpen(false)} />
@@ -42,7 +42,7 @@ export const PinnedMessages = ({ channelId, scrollToMessage, receiverId, message
                   <div key={msg.id} className="bg-[#1e1f22] p-3 rounded border border-white/5 group relative">
                     <div className="flex items-center gap-2 mb-1">
                       <img src={msg.user?.image} className="w-5 h-5 rounded-full" />
-                      <span className="text-[12px] font-bold text-white">{msg.user?.name}</span>
+                      <span className="text-[12px] font-medium text-white">{msg.user?.name}</span>
                     </div>
                     <p className="text-sm text-[#dbdee1] break-words line-clamp-3">{msg.content || "Media Message"}</p>
                     

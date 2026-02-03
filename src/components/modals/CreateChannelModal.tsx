@@ -41,14 +41,14 @@ export default function CreateChannelModal({ isOpen, onClose, serverId }: any) {
       <div className="bg-[#313338] w-full max-w-md rounded-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">Create Channel</h2>
+            <h2 className="text-xl font-medium text-white">Create Channel</h2>
             <X onClick={onClose} className="text-gray-400 cursor-pointer hover:text-white" />
           </div>
 
           <div className="space-y-6">
             {/* Channel Type Selection */}
             <div>
-              <label className="text-xs font-bold text-[#b5bac1] uppercase tracking-wide">Channel Type</label>
+              <label className="text-xs font-medium text-[#b5bac1] uppercase tracking-wide">Channel Type</label>
               <div className="mt-2 space-y-2">
                 <div 
                   onClick={() => setType("TEXT")}
@@ -86,7 +86,7 @@ export default function CreateChannelModal({ isOpen, onClose, serverId }: any) {
 
             {/* Channel Name Input */}
             <div>
-              <label className="text-xs font-bold text-[#b5bac1] uppercase">Channel Name</label>
+              <label className="text-xs font-medium text-[#b5bac1] uppercase">Channel Name</label>
               <div className="relative mt-2">
                 <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input 

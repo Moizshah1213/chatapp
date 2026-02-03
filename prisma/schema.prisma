@@ -9,10 +9,10 @@ datasource db {
 }
 
 model User {
-  id               String       @id @default(uuid())
+  id               String       @id 
   name             String?
   email            String       @unique
-  password         String
+  password         String?
   image            String?
   banner           String?
   status           String       @default("ONLINE")
@@ -26,6 +26,10 @@ model User {
   receivedMessages Message[]    @relation("ReceivedMessages")
   sentMessages     Message[]    @relation("SentMessages")
   servers          Server[]
+  notifications Notification[] @relation("UserNotifications")
+
+  profiles          Profiles? // One-to-one relation
+ 
 }
 
 model Message {
@@ -48,19 +52,23 @@ model Message {
 
   @@index([userId])
   @@index([channelId])
-}
+ }
 
 model Friendship {
   id         String           @id @default(uuid())
   senderId   String
   receiverId String
+  senderUnread    Int      @default(0)
+  receiverUnread  Int      @default(0)
+  lastMessage   String?  
+  lastMessageAt DateTime @default(now())
   status     FriendshipStatus @default(PENDING)
   createdAt  DateTime         @default(now())
   receiver   User             @relation("ReceivedRequests", fields: [receiverId], references: [id])
   sender     User             @relation("SentRequests", fields: [senderId], references: [id])
 
   @@unique([senderId, receiverId])
-}
+ }
 
 model Server {
   id         String    @id @default(uuid())
@@ -75,7 +83,7 @@ model Server {
   profile    User      @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
-}
+ }
 
 model Member {
   id        String     @id @default(uuid())
@@ -89,6 +97,25 @@ model Member {
 
   @@index([profileId])
   @@index([serverId])
+ }
+
+ model Profiles {
+  id             String  @id @map("id")
+  name           String?
+  about          String?
+  image          String?
+  banner         String?
+  pronouns       String?
+  primary_color  String? @default("#5865f2")
+  accent_color   String? @default("#23a559")
+  nameplate      String? @default("default")
+  decoration     String? @default("none")
+  profile_effect String? @default("none")
+  theme          String?  @default("dark")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  
+  user           User    @relation(fields: [id], references: [id], onDelete: Cascade)
+  @@map("Profiles")
 }
 
 model Channel {
@@ -102,22 +129,36 @@ model Channel {
   profile   User        @relation(fields: [profileId], references: [id], onDelete: Cascade)
   server    Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
   messages  Message[]
-}
+ }
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String   // Kis ko notification mili
+  senderId    String   // Kis ne tag kiya
+  type        String   // "MENTION", "SERVER_TAG", "REPLY"
+  content     String   // Message ka preview
+  serverId    String?  // Agar server ka tag hai
+  channelId   String?  // Agar kisi channel mein tag hua
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation("UserNotifications", fields: [userId], references: [id])
+ }
 
 enum MemberRole {
   ADMIN
   MODERATOR
   GUEST
-}
+ }
 
 enum ChannelType {
   TEXT
   VOICE
   VIDEO
-}
+ }
 
 enum FriendshipStatus {
   PENDING
   ACCEPTED
   DECLINED
-}
+ }

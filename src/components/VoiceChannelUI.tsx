@@ -178,7 +178,7 @@ const handleToggleMic = async () => {
       <div className="h-12 border-b border-black/20 flex items-center px-4 justify-between bg-[#313338] z-10">
         <div className="flex items-center gap-2 text-[#23a559]">
           <Volume2 size={20} />
-          <h1 className="font-bold text-white text-[15px]">{channelName}</h1>
+          <h1 className="font-medium text-white text-[15px]">{channelName}</h1>
         </div>
         
         <div className="p-4 flex justify-between items-center">
@@ -203,7 +203,7 @@ onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"
   >
     {/* Participant Identity / Avatar */}
     <div className="flex flex-col items-center gap-3">
-      <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-xl
+      <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-medium text-white shadow-xl
         ${p.isSpeaking ? 'ring-4 ring-[#23a559] scale-110' : 'bg-[#313338]'}`}>
         
       </div>
@@ -239,7 +239,7 @@ onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"
           className="p-4 rounded-2xl bg-[#da373c] text-white hover:bg-[#a1282b] flex items-center gap-3 px-8 transition-all group"
         >
           <PhoneOff size={24} className="group-hover:animate-bounce" />
-          <span className="font-bold uppercase text-xs tracking-widest">Leave</span>
+          <span className="font-medium uppercase text-xs tracking-widest">Leave</span>
         </button>
       </div>
     </div>

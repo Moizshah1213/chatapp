@@ -137,20 +137,24 @@ const displayFriends = friends.filter((f) => {
   return false; 
 });
   return (
-    <div className="flex-1 flex flex-col bg-[#0B0F14] font-sans text-[#dbdee1] h-full overflow-hidden">
+    <div className="flex-1 flex flex-col bg-transparent font-sans text-[#dbdee1] h-full overflow-hidden">
       
       {/* ✅ NAVBAR */}
       <div className="h-12 mt-3 border-b border-white/5 flex items-center px-4 bg-black/10 shrink-0">
         <div className="md:hidden mr-2">{mobileMenuTrigger}</div>
         <div className="flex items-center gap-2 pr-4 border-r border-white/10 shrink-0">
-          <UserPlus size={20} className="text-[#949ba4]" />
-          <span className="font-bold text-[15px]">Friends</span>
+           <svg aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#c4c4c4b3" viewBox="0 0 24 24">
+        <path fill="var(--interactive-icon-default)" d="M13 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path>
+        <path fill="var(--interactive-icon-default)" d="M3 5v-.75C3 3.56 3.56 3 4.25 3s1.24.56 1.33 1.25C6.12 8.65 9.46 12 13 12h1a8 8 0 0 1 8 8 2 2 0 0 1-2 2 .21.21 0 0 1-.2-.15 7.65 7.65 0 0 0-1.32-2.3c-.15-.2-.42-.06-.39.17l.25 2c.02.15-.1.28-.25.28H9a2 2 0 0 1-2-2v-2.22c0-1.57-.67-3.05-1.53-4.37A15.85 15.85 0 0 1 3 5Z">
+          </path>
+          </svg>
+          <span className="font-medium text-[15px]">Friends</span>
         </div>
         
         <div className="flex-1 overflow-x-auto no-scrollbar flex items-center h-full px-2 gap-2">
           {["online", "all", "pending"].map((t) => (
             <button key={t} onClick={() => setSubTab(t)}
-              className={`text-[14px] font-medium px-3 py-1 rounded transition-all capitalize whitespace-nowrap shrink-0
+              className={`text-[14px] font-medium px-3 py-1 cursor-pointer rounded transition-all capitalize whitespace-nowrap shrink-0
                 ${subTab === t ? "bg-white/10 text-white" : "text-[#949ba4] hover:text-[#dbdee1] hover:bg-white/5"}`}
             >
               {t} {t === "pending" && pendingRequests.length > 0 && (
@@ -159,7 +163,7 @@ const displayFriends = friends.filter((f) => {
             </button>
           ))}
           <button onClick={() => setSubTab("add")}
-            className={`text-[14px] font-bold px-3 py-1 rounded transition-all whitespace-nowrap shrink-0
+            className={`text-[14px] cursor-pointer font-medium px-3 py-1 rounded transition-all whitespace-nowrap shrink-0
               ${subTab === "add" ? "text-[#23a559] bg-[#23a559]/10" : "bg-[#248046] text-white hover:bg-[#1a6334]"}`}
           >
             Add Friend
@@ -173,7 +177,7 @@ const displayFriends = friends.filter((f) => {
         {/* 1. ADD FRIEND VIEW */}
         {subTab === "add" && (
           <div className="max-w-2xl animate-in fade-in slide-in-from-top-2">
-            <h2 className="text-white font-bold text-lg uppercase mb-2">Add Friend</h2>
+            <h2 className="text-white font-medium text-lg uppercase mb-2">Add Friend</h2>
             <p className="text-[#949ba4] text-sm mb-4">You can add friends with their Discord username.</p>
             <div className="bg-[#1e1f22] rounded-lg p-3 flex items-center border border-black/40 focus-within:border-[#00a8fc] transition-all">
               <input 
@@ -193,15 +197,15 @@ const displayFriends = friends.filter((f) => {
         {/* 2. PENDING REQUESTS VIEW */}
         {subTab === "pending" && (
           <div className="space-y-4 animate-in fade-in">
-            <p className="text-[#949ba4] text-[12px] font-bold uppercase tracking-wider">Pending — {pendingRequests.length}</p>
+            <p className="text-[#949ba4] text-[12px] font-medium uppercase tracking-wider">Pending — {pendingRequests.length}</p>
             {pendingRequests.length > 0 ? pendingRequests.map((req) => (
               <div key={req.id} className="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg border-t border-white/5 group">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white">
+                  <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-medium text-white">
                     {req.sender?.name?.[0] || "?"}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-white font-bold text-sm">{req.sender?.name}</span>
+                    <span className="text-white font-medium text-sm">{req.sender?.name}</span>
                     <span className="text-gray-400 text-xs">Incoming Friend Request</span>
                   </div>
                 </div>
@@ -266,7 +270,7 @@ const currentStatus = presenceData?.status || friend.status || 'OFFLINE';
       </div>
 
     <div className="flex flex-col">
-        <span className="text-[14px] font-bold text-white leading-tight">{friend.name}</span>
+        <span className="text-[14px] font-medium text-white leading-tight">{friend.name}</span>
         <span className="text-[12px] text-gray-400 font-medium capitalize">{currentStatus.toLowerCase()}</span>
       </div>
     </div>

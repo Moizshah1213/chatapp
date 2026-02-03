@@ -1,42 +1,28 @@
-import "./globals.css"
-import { Inter } from "next/font/google"
-import { NextAuthProvider } from "@/providers/NextAuthProvider"
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-})
-
-export const metadata = {
-  title: "Discord Clone",
-  description: "Realtime chat app",
-  manifest: "/manifest.json",
-  themeColor: "#0f0f0f",
-}
+// src/app/layout.tsx
+import "./globals.css";
+import { GeistSans } from 'geist/font/sans'; 
+import { GeistMono } from 'geist/font/mono'; 
+import type { Metadata } from "next";
+import ClientLayout from "./ClientLayout";
+import {toast, Toaster} from "react-hot-toast";
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-     <body className={`${inter.className} bg-[#0f0f0f] text-white`}>
-  <NextAuthProvider>{children}</NextAuthProvider>
-
-  <script
-    dangerouslySetInnerHTML={{
-      __html: `
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-          })
-        }
-      `,
-    }}
-  />
-</body>
-
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`${GeistSans.className} antialiased bg-[#0f0f0f] text-white`}>
+        <ClientLayout>{children}</ClientLayout>
+         <Toaster position="top-right" reverseOrder={false} toastOptions={{
+        // 🚀 Yeh style property ensure karegi ke toast har cheez ke upar ho
+        style: {
+          zIndex: 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999, 
+         
+        },
+      }}  />
+      </body>
     </html>
-  )
+  );
 }

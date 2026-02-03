@@ -4,8 +4,11 @@
 @import "tailwindcss";
 
 
-:root {
-  --font-inter: 'Inter', sans-serif !important;
+:root{
+  --devtools-sidebar-width: 0px;
+}
+.react-hot-toast-container {
+  z-index: 100009999999000 !important; /* Popover se bhi zyada z-index */
 }
 
 html, body {
@@ -28,18 +31,22 @@ html, body {
 }
 
   body {
-    /* Pure Black to Deep Navy Blue Gradient */
-    background: linear-gradient(180deg, #000000 0%, #020617 100%);
-    background-attachment: fixed;
-    color: white;
-    
-     font-family: var(--font-inter) !important;
+  /* Pure Black to Deep Navy Blue Gradient (Ye bohot sahi lag raha hai!) */
+  background: linear-gradient(180deg, #000000 0%, #020617 100%);
+  background-attachment: fixed;
+  color: white;
+
+  /* ✅ Geist Font Variables use karein jo Layout se aa rahe hain */
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui !important;
   -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale ;
-  }
+  -moz-osx-font-smoothing: grayscale;
+  
+}
+
 
 /* Scrollbar ko bhi clean monospace look dein */
 
+/* globals.css */
 
 /* Chat area ke liye special gradient class */
 .chat-gradient {
@@ -80,4 +87,13 @@ html, body {
 
 .titlebar button {
   -webkit-app-region: no-drag;
+}
+
+@keyframes discordRinging {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.animate-discord-ring {
+  animation: discordRinging 2s infinite;
 }

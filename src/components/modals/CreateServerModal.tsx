@@ -80,7 +80,7 @@ export default function CreateServerModal({ isOpen, onClose }: any) {
             <X size={20} />
           </button>
 
-          <h2 className="text-2xl font-bold text-white mb-2">Customize your server</h2>
+          <h2 className="text-2xl font-medium text-white mb-2">Customize your server</h2>
           <p className="text-[#b5bac1] text-sm mb-6">Give your new server a personality with a name and an icon.</p>
           
           <div className="flex justify-center mb-6">
@@ -98,7 +98,7 @@ export default function CreateServerModal({ isOpen, onClose }: any) {
 
           <div className="text-left space-y-4">
             <div>
-              <label className="text-xs font-bold text-[#b5bac1] uppercase">Server Name</label>
+              <label className="text-xs font-medium text-[#b5bac1] uppercase">Server Name</label>
               <input 
                 value={name}
                 onChange={(e) => setName(e.target.value)}

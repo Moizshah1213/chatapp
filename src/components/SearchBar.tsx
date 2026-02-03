@@ -95,7 +95,7 @@ export const SearchBar = ({ friendName, messages, scrollToMessage }: SearchBarPr
         ) : (
           /* Search Results (Aapka purana logic) */
           <div className="flex flex-col">
-             <div className="p-3 border-b border-white/5 text-[11px] font-bold text-gray-400 uppercase">
+             <div className="p-3 border-b border-white/5 text-[11px] font-medium text-gray-400 uppercase">
                 Search Results for "{query}"
              </div>
              <div className="max-h-[350px] overflow-y-auto custom-scrollbar p-1">

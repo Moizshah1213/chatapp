@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 
-export const HoverAvatar = ({ src, name, className, status }: any) => {
+export const HoverAvatar = ({ src, name, className, status, onClick }: any) => {
   const [isHovered, setIsHovered] = useState(false);
   const [staticThumb, setStaticThumb] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -27,6 +27,7 @@ export const HoverAvatar = ({ src, name, className, status }: any) => {
 
   return (
     <div 
+    onClick={onClick}
       className={`relative flex-shrink-0 cursor-pointer ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -51,7 +52,7 @@ export const HoverAvatar = ({ src, name, className, status }: any) => {
             )}
           </>
         ) : (
-          <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white font-bold uppercase text-xs">
+          <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white font-medium uppercase text-xs">
             {name?.substring(0, 1)}
           </div>
         )}

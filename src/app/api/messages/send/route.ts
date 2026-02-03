@@ -1,12 +1,29 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db"; // Aapka central db export
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { createServerClient } from "@supabase/ssr"; // ✅ Supabase SSR
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    // 1. Supabase Client Setup
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    // 2. Session Check
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -16,35 +33,33 @@ export async function POST(req: Request) {
       return new NextResponse("Content missing", { status: 400 });
     }
 
-    // Current user ki ID nikalna email se
-    const currentUser = await db.user.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!currentUser) return new NextResponse("User not found", { status: 404 });
-
-    // 1. Database mein message save karein
+    // 3. Database mein message save karein
+    // Note: 'user.id' seedha use karein, email se find karne ki zaroorat nahi
     const message = await db.message.create({
       data: {
         content,
         fileUrl,
         fileType,
-        userId: currentUser.id,
-        receiverId: receiverId || null, // For DMs
-        channelId: channelId || null,   // For Server Channels
+        userId: user.id, // Supabase ID is Prisma Profile ID
+        receiverId: receiverId || null, 
+        channelId: channelId || null,   
       },
       include: {
-        user: true // Taake frontend ko sender ki info (name, image) sath mil jaye
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          }
+        }
       }
     });
 
-    // ❌ Pusher ka code yahan se nikal diya hai
-    // ✅ Supabase Realtime 'Message' table mein naya data dekhte hi 
-    // khud sab ko broadcast kar dega.
-
+    // Supabase Realtime automatically broadcasts this insert if enabled on DB level
     return NextResponse.json(message);
-  } catch (error) {
+
+  } catch (error: any) {
     console.error("[MESSAGE_SEND_ERROR]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse(`Internal Error: ${error.message}`, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db"; 
-import { getServerSession } from "next-auth"; 
-import { authOptions } from "@/lib/auth";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 interface InvitePageProps {
   params: Promise<{
@@ -10,63 +10,73 @@ interface InvitePageProps {
 }
 
 const InvitePage = async ({ params }: InvitePageProps) => {
-  // Params ko unwrap karein (Next.js 15 syntax)
   const { inviteCode } = await params;
-  
-  const session = await getServerSession(authOptions);
+  const cookieStore = await cookies();
 
-  // Agar user login nahi hai
-  if (!session?.user) {
-    return redirect("/login");
+  // 1. Supabase Client Setup (User check karne ke liye)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) { return cookieStore.get(name)?.value; },
+      },
+    }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Agar user login nahi hai, toh login page par bhejien
+  if (!user) {
+    return redirect(`/login?returnTo=/invite/${inviteCode}`);
   }
 
   if (!inviteCode) {
     return redirect("/");
   }
 
-  // 1. Check karein ke user pehle se member hai?
+  // 2. Check karein ke user pehle se member hai?
   const existingServer = await db.server.findFirst({
     where: {
       inviteCode: inviteCode,
       members: {
         some: {
-          profileId: session.user.id
+          profileId: user.id // Supabase Auth ID
         }
       }
     }
   });
 
   if (existingServer) {
-    // Agar member hai toh home page par bhejien (ya server dashboard par)
-    return redirect("/"); 
+    return redirect(`/?serverId=${existingServer.id}`); 
   }
 
-  // 2. Naya member add karein
-  const server = await db.server.update({
-    where: {
-      inviteCode: inviteCode,
-    },
-    data: {
-      members: {
-        create: [
-          {
-            profileId: session.user.id,
-          }
-        ]
+  // 3. Naya member add karein
+  try {
+    const server = await db.server.update({
+      where: {
+        inviteCode: inviteCode,
+      },
+      data: {
+        members: {
+          create: [
+            {
+              profileId: user.id,
+            }
+          ]
+        }
       }
+    });
+
+    if (server) {
+      return redirect(`/?serverId=${server.id}`); 
     }
-  });
+  } catch (error) {
+    console.error("INVITE_PAGE_ERROR", error);
+    return redirect("/");
+  }
 
-  // Join karne ke baad home page par bhej dein
-  if (server) {
-  // 1. Agar aap chahte hain ke user home page par jaye aur wahan server select ho jaye:
-  return redirect(`/?serverId=${server.id}`); 
-  
-  // 2. Ya agar aapka dashboard sirf "/" par hai bina query ke:
-  // return redirect("/"); 
-}
-
-return redirect("/");
+  return redirect("/");
 };
 
 export default InvitePage;

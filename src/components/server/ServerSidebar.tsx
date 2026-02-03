@@ -46,7 +46,7 @@ export default function ServerSidebar({
       <div className="relative">
       <button 
         onClick={() => setIsServerMenuOpen(!isServerMenuOpen)}
-        className="w-full h-12 border-b border-black/20 flex items-center px-4 font-bold text-white hover:bg-[#35373c] transition shadow-sm"
+        className="w-full h-12 border-b border-black/20 flex items-center px-4 font-medium text-white hover:bg-[#35373c] transition shadow-sm"
       >
         <span className="truncate flex-1 text-left text-[15px]">
           {server?.name || "Server Name"}
@@ -93,7 +93,7 @@ export default function ServerSidebar({
           <div className="flex items-center justify-between px-2 mb-1 group">
             <div className="flex items-center gap-0.5 cursor-pointer hover:text-[#dbdee1]">
               <ChevronDown size={12} />
-              <span className="text-[12px] font-bold uppercase tracking-wider">Text Channels</span>
+              <span className="text-[12px] font-medium uppercase tracking-wider">Text Channels</span>
             </div>
             <Plus 
               onClick={() => {
@@ -128,7 +128,7 @@ export default function ServerSidebar({
           <div className="flex items-center justify-between px-2 mb-1 group">
             <div className="flex items-center gap-0.5 cursor-pointer hover:text-[#dbdee1] transition">
               <ChevronDown size={12} />
-              <span className="text-[12px] font-bold uppercase tracking-wider">Voice Channels</span>
+              <span className="text-[12px] font-medium uppercase tracking-wider">Voice Channels</span>
             </div>
             <Plus 
               onClick={() => setIsChannelModalOpen(true)}

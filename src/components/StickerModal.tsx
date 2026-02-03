@@ -63,7 +63,7 @@ export const StickerModal = ({ onStickerSelect, onCustomUpload }: {
       
       {/* --- CUSTOM STICKER SECTION --- */}
       <div className="mb-4 sm:mb-6">
-        <h3 className="text-[11px] sm:text-[12px] font-bold text-[#23a559] uppercase tracking-wider mb-2 px-1 flex items-center gap-2">
+        <h3 className="text-[11px] sm:text-[12px] font-medium text-[#23a559] uppercase tracking-wider mb-2 px-1 flex items-center gap-2">
            <Plus size={14} /> My Custom Stickers
         </h3>
         <div className="grid grid-cols-4 sm:grid-cols-3 gap-2 sm:gap-3">
@@ -72,7 +72,7 @@ export const StickerModal = ({ onStickerSelect, onCustomUpload }: {
             className="relative aspect-square bg-[#313338] border-2 border-dashed border-white/10 hover:border-[#23a559]/50 rounded-lg flex flex-col items-center justify-center gap-1 group transition-all"
           >
             <ImageIcon size={20} className="text-[#949ba4] group-hover:text-[#23a559]" />
-            <span className="text-[9px] text-[#949ba4] font-bold">Upload</span>
+            <span className="text-[9px] text-[#949ba4] font-medium">Upload</span>
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -87,7 +87,7 @@ export const StickerModal = ({ onStickerSelect, onCustomUpload }: {
       {/* --- CATEGORIES --- */}
       {STICKER_CATEGORIES.map((cat) => (
         <div key={cat.name} className="mb-4 sm:mb-6">
-          <h3 className="text-[11px] sm:text-[12px] font-bold text-[#949ba4] uppercase tracking-wider mb-2 px-1">
+          <h3 className="text-[11px] sm:text-[12px] font-medium text-[#949ba4] uppercase tracking-wider mb-2 px-1">
             {cat.name}
           </h3>
           <div className="grid grid-cols-4 sm:grid-cols-3 gap-2 sm:gap-3">

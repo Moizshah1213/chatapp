@@ -18,6 +18,10 @@ module.exports = {
         neonYellow: "#E2FB6D",
         neonPurple: "#8A2BE2",
       },
+      fontFamily: {
+      sans: ['var(--font-geist-sans)'],
+      mono: ['var(--font-geist-mono)'],
+    },
     },
   },
   plugins: [],

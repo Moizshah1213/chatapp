@@ -21,7 +21,7 @@ export const StatusIcon = ({ status, size = "md" }: StatusIconProps) => {
   const currentSize = sizes[size];
 
   return (
-    <div className={`absolute -bottom-1 -right-1 rounded-full border-[#232428] flex items-center justify-center overflow-hidden transition-all ${currentSize} ${statusColors[status] || "bg-[#80848e]"}`}>
+    <div className={`-right-1 rounded-full border-[#232428] flex items-center justify-center overflow-hidden transition-all ${currentSize} ${statusColors[status] || "bg-[#80848e]"}`}>
       
       {/* 1. DND Shape (Minus Sign) */}
       {status === "DND" && (

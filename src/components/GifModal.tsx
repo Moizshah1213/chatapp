@@ -75,7 +75,7 @@ export const GifModal = ({ onGifSelect }: { onGifSelect: (url: string) => void }
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold transition whitespace-nowrap ${activeCategory === cat.id ? 'bg-white text-black' : 'bg-[#2b2d31] text-[#dbdee1] hover:bg-[#35373c]'}`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium transition whitespace-nowrap ${activeCategory === cat.id ? 'bg-white text-black' : 'bg-[#2b2d31] text-[#dbdee1] hover:bg-[#35373c]'}`}
             >
               {cat.icon} {cat.label}
             </button>
