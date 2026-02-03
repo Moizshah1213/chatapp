@@ -51,18 +51,28 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 🛡️ Step 4: Prisma Database Save
-    try {
-      const user = await db.user.create({
-        data: {
-          id: authData.user.id,
-          email: email,
+   // 2. Prisma Database Save inside api/register/route.ts
+try {
+  const user = await db.user.create({
+    data: {
+      id: authData.user.id,
+      email: email,
+      name: name,
+      password: hashedPassword,
+      image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
+      status: "ONLINE",
+      statusPreference: "ONLINE",
+      // 🚀 Yahan profile bhi saath hi create kar dein taake Dashboard pe error na aaye
+      profiles: {
+        create: {
           name: name,
-          password: hashedPassword,
+          theme: "dark",
           image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
-          status: "ONLINE",
-          statusPreference: "ONLINE",
         }
-      });
+      }
+    }
+  });
+
 
       return NextResponse.json({ message: "Registered!", user });
 
