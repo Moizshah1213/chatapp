@@ -3,13 +3,15 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-const { searchParams, origin } = new URL(request.url) //
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
   
+  // 🚀 IMPORTANT: Origin ko hardcode karein ya env se uthayein
+  // Taake Tauri app ko pata chale ke wapas kahan jana hai
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://chatapp-nine-tau-55.vercel.app'
 
   if (code) {
-    // 🟢 NEXT.JS 15 FIX: cookies() ko await karein
     const cookieStore = await cookies() 
 
     const supabase = createServerClient(
@@ -21,11 +23,10 @@ const { searchParams, origin } = new URL(request.url) //
             return cookieStore.get(name)?.value
           },
           set(name: string, value: string, options: CookieOptions) {
-            // Next.js 15 mein cookieStore.set available hai
             cookieStore.set({ name, value, ...options })
           },
-          remove(name: string, options: CookieOptions) {
-            cookieStore.set({ name, value: '', ...options })
+          remove(name: string, options: any) {
+            cookieStore.delete(name) // 👈 delete() use karein remove ke liye
           },
         },
       }
@@ -34,11 +35,13 @@ const { searchParams, origin } = new URL(request.url) //
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // 🚀 Redirect to the absolute live URL
+      return NextResponse.redirect(`${baseUrl}${next}`)
     }
     
     console.error('Auth Error:', error.message)
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth-code-error`)
+  // Error case mein wapas login par
+  return NextResponse.redirect(`${baseUrl}/login?error=auth-code-error`)
 }
