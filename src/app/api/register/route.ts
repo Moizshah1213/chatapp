@@ -10,6 +10,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, name, password } = body;
 
+    // 🛡️ Step 1: Pre-check database
+    const userExists = await db.user.findUnique({ where: { email } });
+    if (userExists) {
+      return NextResponse.json({ error: "User already registered in Database." }, { status: 400 });
+    }
+
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,29 +29,32 @@ export async function POST(request: Request) {
       }
     );
 
-    // 1. Supabase Signup
-// ✅ Yahan 'formData' ki jagah ye variables hain
+    // 🛡️ Step 2: Supabase Signup
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: `https://chatapp-nine-tau-55.vercel.app/auth/callback`,
+      },
+    });
 
-// 2. Supabase signUp mein in variables ko use karein
-const { data: authData, error: authError } = await supabase.auth.signUp({
-  email: email,      // 👈 formData.email ki jagah sirf 'email'
-  password: password, // 👈 formData.password ki jagah sirf 'password'
-  options: {
-    data: { full_name: name },
-    // Is line ko change karein
-emailRedirectTo: `https://chatapp-nine-tau-55.vercel.app/auth/callback`,
-  },
-});
-    if (authError) return NextResponse.json({ error: authError.message }, { status: 400 });
+    // Agar user pehle se Auth mein hai magar DB mein nahi, toh Supabase error dega
+    // Lekin humein check karna hai ke error "User already registered" hai ya kuch aur
+    if (authError) {
+       return NextResponse.json({ error: authError.message }, { status: 400 });
+    }
+
     if (!authData.user) return NextResponse.json({ error: "Auth failed" }, { status: 500 });
 
+    // 🛡️ Step 3: Password Hashing
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 2. Prisma Database Save with Detailed Logging
+    // 🛡️ Step 4: Prisma Database Save
     try {
       const user = await db.user.create({
         data: {
-          id: authData.user.id, // Supabase ki ID
+          id: authData.user.id,
           email: email,
           name: name,
           password: hashedPassword,
@@ -58,16 +67,17 @@ emailRedirectTo: `https://chatapp-nine-tau-55.vercel.app/auth/callback`,
       return NextResponse.json({ message: "Registered!", user });
 
     } catch (dbError: any) {
-      // ❗ YEH LINE TERMINAL MEIN DEKHEIN
+      // ❗ AGAR YAHAN ERROR AAYE: Iska matlab hai Prisma schema match nahi kar raha
       console.error("❌ PRISMA_DETAILED_ERROR:", dbError);
       
+      // Pro-Tip: Agar DB fail ho jaye, toh humein user ko batana hoga
       return NextResponse.json({ 
-        error: `DB Error: ${dbError.code || 'Unknown'}. Check terminal.` 
+        error: `Database Save Failed: ${dbError.message || 'Check Prisma Schema'}` 
       }, { status: 500 });
     }
 
   } catch (error: any) {
     console.error("❌ GLOBAL_ERROR:", error);
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
