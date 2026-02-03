@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // 1. Initial response create karein
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -11,15 +12,14 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        // 🟢 Naya aur Optimized Tarika
         getAll() {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          // ✅ Request aur Response dono ko ek saath sync karein
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
+          
+          // Naya response object create karne ki bajaye purane mein hi cookies daalein
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: getUser() call karna zaroori hai session refresh ke liye
+  // 🛡️ Session refresh ke liye getUser() zaroori hai
   const { data: { user } } = await supabase.auth.getUser()
 
   const url = request.nextUrl.clone()
@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // 🛑 Auth Pages Logic (Login/Register se Dashboard bhejna)
+  // 🛑 Auth Pages Logic (Login user ko login/register se dashboard bhejna)
   if (user && (url.pathname === '/login' || url.pathname === '/register')) {
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
@@ -51,13 +51,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public assets (svg, png, etc)
+     * Matcher mein auth/callback aur api ko handle karna zaroori hai
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-}
+} 
