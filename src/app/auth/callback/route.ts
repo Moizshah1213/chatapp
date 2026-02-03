@@ -3,13 +3,10 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
+const { searchParams, origin } = new URL(request.url) //
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
   
-  const host = request.headers.get('host')
-  const protocol = host?.includes('localhost') ? 'http' : 'https'
-const origin = "https://volitional-stephenie-overfruitfully.ngrok-free.dev";
 
   if (code) {
     // 🟢 NEXT.JS 15 FIX: cookies() ko await karein
