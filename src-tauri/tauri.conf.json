@@ -1,29 +1,8 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Cursed Spirit",
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "lol",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
-  "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
-    "devUrl": "http://localhost:3000",
-    "frontendDist": ".next"
-},
-
-  "app": {
-    "windows": [
-      {
-        "title": "Cursed Spirit",
-        "width": 1280,
-        "height": 800,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ],
-    "security": {
-      "csp": null
-    }
-  },
+  "identifier": "com.atang.lol",
   "bundle": {
     "active": true,
     "targets": "all",
@@ -34,5 +13,23 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Discord Clone",
+        "width": 1920,
+        "height": 1080
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' https://chatapp-nine-tau-55.vercel.app; img-src 'self' asset: data: https:; connect-src 'self' https:;"
+    }
+  },
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "",
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "https://chatapp-nine-tau-55.vercel.app"
   }
 }
