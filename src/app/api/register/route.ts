@@ -32,7 +32,8 @@ const { data: authData, error: authError } = await supabase.auth.signUp({
   password: password, // 👈 formData.password ki jagah sirf 'password'
   options: {
     data: { full_name: name },
-    emailRedirectTo: `${new URL(request.url).origin}/auth/callback`, 
+    // Is line ko change karein
+emailRedirectTo: `https://chatapp-nine-tau-55.vercel.app/auth/callback`,
   },
 });
     if (authError) return NextResponse.json({ error: authError.message }, { status: 400 });
