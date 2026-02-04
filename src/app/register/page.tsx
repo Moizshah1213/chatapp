@@ -6,11 +6,14 @@ import Link from "next/link";
 import { User, Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
+import { Turnstile } from '@marsidev/react-turnstile'; //
+
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null); // 👈 Yeh lazmi hai
   const router = useRouter();
 const [success, setSuccess] = useState(""); // 👈 Success message ke liye
   // 🟢 Supabase Client Initialize
