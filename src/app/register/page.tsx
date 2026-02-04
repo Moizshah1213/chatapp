@@ -187,7 +187,7 @@ setSuccess("Registration successful! Please check your email if confirmation is 
                 siteKey="0x4AAAAAACWezO7Ql2IkLe98"
                  onError={() => setError("Captcha failed to load.")}
                 onExpire={() => setTurnstileToken(null)}
-                onVerify={(token) => setTurnstileToken(token)}
+                 onSuccess={(token) => setTurnstileToken(token)}
                 options={{
     theme: 'dark', // 👈 Theme ko options ke andar le jayein
   }}
