@@ -6,12 +6,13 @@ import Link from "next/link";
 import { User, Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-
+const [success, setSuccess] = useState(""); // 👈 Success message ke liye
   // 🟢 Supabase Client Initialize
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,6 +22,10 @@ export default function RegisterPage() {
   // 🔐 1. Email/Password Signup Logic
  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+   if (!turnstileToken) {
+      setError("Please complete the captcha verification.");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -33,6 +38,7 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
           name: formData.name,
+          captchaToken: turnstileToken,
         }),
       });
 
@@ -43,8 +49,13 @@ export default function RegisterPage() {
       }
 
       // 2. Agar API successful hai
-      alert("Registration successful! Please check your email if confirmation is enabled.");
-      router.push("/login");
+     if (!response.ok) {
+  throw new Error(result.error || "Registration failed");
+}
+
+// ✅ Alert ki jagah success state set karein
+setSuccess("Registration successful! Please check your email if confirmation is enabled.");
+// router.push("/login"); // Agar aap message dikhana chahte hain, toh foran redirect na karein
 
     } catch (err: any) {
       setError(err.message);
@@ -120,6 +131,19 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          {success && (
+  <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-3 rounded-xl text-xs mb-6 text-center">
+    {success}
+  </div>
+)}
+
+{/* Error Message 🔴 */}
+{error && (
+  <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl text-xs mb-6 text-center animate-shake">
+    {error}
+  </div>
+)}
+
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative group">
@@ -155,15 +179,26 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
+            <div className="flex justify-center py-2">
+              <Turnstile 
+                siteKey="0x4AAAAAACWezO7Ql2IkLe98"
+                 onError={() => setError("Captcha failed to load.")}
+                onExpire={() => setTurnstileToken(null)}
+                options={{
+    theme: 'dark', // 👈 Theme ko options ke andar le jayein
+  }}
+              />
+            </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !turnstileToken} // Disable if no token
               className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 group shadow-lg shadow-blue-600/20 mt-2"
             >
               {loading ? "Creating Account..." : "Create Account"}
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
+          </form>
           </form>
 
           {/* Footer */}
