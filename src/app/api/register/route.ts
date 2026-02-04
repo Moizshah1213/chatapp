@@ -8,7 +8,8 @@ import bcrypt from "bcryptjs";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, name, password } = body;
+    const { email, name, password, captchaToken } = body;
+    
 
     // 🛡️ Step 1: Pre-check database
     const userExists = await db.user.findUnique({ where: { email } });
@@ -28,6 +29,33 @@ export async function POST(request: Request) {
         },
       }
     );
+
+    // 1. Cloudflare Turnstile Verification 🛡️
+const secretKey = '0x4AAAAAACWezO7Ql2IkLe98'; // 🔑 Secret key from .env
+
+if (!captchaToken) {
+  return NextResponse.json({ error: "Captcha token missing" }, { status: 400 });
+}
+
+// Cloudflare ki API ko verification ke liye call karein
+const verificationResponse = await fetch(
+  "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `secret=${encodeURIComponent(secretKey!)}&response=${encodeURIComponent(captchaToken)}`,
+  }
+);
+
+const verificationData = await verificationResponse.json();
+
+// Agar captcha fail ho jaye
+if (!verificationData.success) {
+  return NextResponse.json({ error: "Invalid captcha. Please try again." }, { status: 400 });
+}
+
+// ✅ Agar yahan tak code pohancha, matlab captcha sahi hai! 
+// Ab apka purana logic (Step 1: Pre-check database) shuru hoga...
 
     // 🛡️ Step 2: Supabase Signup
     const { data: authData, error: authError } = await supabase.auth.signUp({
