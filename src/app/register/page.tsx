@@ -5,35 +5,32 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, Mail, Lock, ArrowRight, Github, Chrome } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
-
-import { Turnstile } from '@marsidev/react-turnstile'; //
-
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null); // 👈 Yeh lazmi hai
+  const [success, setSuccess] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const router = useRouter();
-const [success, setSuccess] = useState(""); // 👈 Success message ke liye
-  // 🟢 Supabase Client Initialize
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // 🔐 1. Email/Password Signup Logic
- const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-   if (!turnstileToken) {
+    if (!turnstileToken) {
       setError("Please complete the captcha verification.");
       return;
     }
     setLoading(true);
     setError("");
+    setSuccess("");
 
     try {
-      // 1. Apni Register API ko call karein (Ye Supabase + Prisma dono handle karegi)
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,15 +48,8 @@ const [success, setSuccess] = useState(""); // 👈 Success message ke liye
         throw new Error(result.error || "Registration failed");
       }
 
-      // 2. Agar API successful hai
-     if (!response.ok) {
-  throw new Error(result.error || "Registration failed");
-}
-
-// ✅ Alert ki jagah success state set karein
-setSuccess("Registration successful! Please check your email if confirmation is enabled.");
-// router.push("/login"); // Agar aap message dikhana chahte hain, toh foran redirect na karein
-
+      setSuccess("Registration successful! Please check your email for confirmation.");
+      // Option: router.push("/login") after 3 seconds
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -67,17 +57,14 @@ setSuccess("Registration successful! Please check your email if confirmation is 
     }
   };
 
-  // 🌐 2. Social Login Logic (Google/Github)
   const handleSocialLogin = async (provider: 'google' | 'github') => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-    
     if (error) setError(error.message);
   };
+
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#050505] p-4 sm:p-6 lg:p-8 selection:bg-blue-500/30 relative overflow-hidden">
@@ -185,12 +172,10 @@ setSuccess("Registration successful! Please check your email if confirmation is 
             <div className="flex justify-center py-2">
               <Turnstile 
                 siteKey="0x4AAAAAACWezO7Ql2IkLe98"
-                 onError={() => setError("Captcha failed to load.")}
+                onVerify={(token) => setTurnstileToken(token)} // 👈 YE FIX HAI
+                onError={() => setError("Captcha load nahi ho saka.")}
                 onExpire={() => setTurnstileToken(null)}
-                 onSuccess={(token) => setTurnstileToken(token)}
-                options={{
-    theme: 'dark', // 👈 Theme ko options ke andar le jayein
-  }}
+                options={{ theme: 'dark' }}
               />
             </div>
 
