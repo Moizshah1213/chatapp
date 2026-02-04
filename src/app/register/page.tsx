@@ -171,12 +171,19 @@ export default function RegisterPage() {
             </div>
             <div className="flex justify-center py-2">
               <Turnstile 
-                siteKey="0x4AAAAAACWezO7Ql2IkLe98"
-                onSuccess={(token) => setTurnstileToken(token)} // 👈 YE FIX HAI
-                onError={() => setError("Captcha load nahi ho saka.")}
-                onExpire={() => setTurnstileToken(null)}
-                options={{ theme: 'dark' }}
-              />
+  siteKey="0x4AAAAAACWezO7Ql2IkLe98"
+  // onSuccess ka istemal karke dekhte hain agar onVerify masla kar raha hai
+  onSuccess={(token) => {
+    console.log("Captcha Token generated:", token); // Console check karein
+    setTurnstileToken(token);
+    setError(""); // Purane errors clear karein
+  }}
+  onError={() => setError("Captcha failed to load.")}
+  onExpire={() => setTurnstileToken(null)}
+  options={{
+    theme: 'dark',
+  }}
+/>
             </div>
 
             <button
