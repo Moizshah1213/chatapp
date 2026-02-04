@@ -172,7 +172,7 @@ export default function RegisterPage() {
             <div className="flex justify-center py-2">
               <Turnstile 
                 siteKey="0x4AAAAAACWezO7Ql2IkLe98"
-                onVerify={(token) => setTurnstileToken(token)} // 👈 YE FIX HAI
+                onSuccess={(token) => setTurnstileToken(token)} // 👈 YE FIX HAI
                 onError={() => setError("Captcha load nahi ho saka.")}
                 onExpire={() => setTurnstileToken(null)}
                 options={{ theme: 'dark' }}
