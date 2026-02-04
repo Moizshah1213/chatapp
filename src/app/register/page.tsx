@@ -199,7 +199,7 @@ setSuccess("Registration successful! Please check your email if confirmation is 
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
-          </form>
+       
 
           {/* Footer */}
           <p className="mt-8 text-center text-sm text-gray-500">
